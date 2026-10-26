@@ -73,6 +73,13 @@
         p.name+' har ett redovisat klimatavtryck på '+number(p.climate)+' kg CO₂e per kg produkt.');
       if(q.organic)return p.organic?tr('Yes, '+p.name+' is organic.','Ja, '+p.name+' är ekologisk.'):
         tr('No, '+p.name+" isn't labelled organic.",'Nej, '+p.name+' är inte märkt som ekologisk.');
+      if(q.coffee||q.cooking||q.baking){
+        const purpose=q.coffee?'coffee':q.cooking?'cooking':'baking';
+        const label={coffee:'kaffe',cooking:'matlagning',baking:'bakning'}[purpose];
+        return p.purposes.includes(purpose)?
+          tr('Yes, '+p.name+' works for '+purpose+'.','Ja, '+p.name+' passar för '+label+'.'):
+          tr('That use is not listed for '+p.name+'.','Det användningsområdet anges inte för '+p.name+'.');
+      }
       return tr(p.name+' has '+number(p.sugar)+' g sugars and '+number(p.fat)+' g fat per 100 ml.',
         p.name+' har '+number(p.sugar)+' g sockerarter och '+number(p.fat)+' g fett per 100 ml.');
     }
