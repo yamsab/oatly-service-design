@@ -17,7 +17,7 @@ To publish it with GitHub Pages:
 1. Open **Settings → Pages** for this repository.
 2. Under **Build and deployment**, choose **Deploy from a branch**.
 3. Select **main** and **/(root)**, then click **Save**.
-4. Wait for GitHub Pages to provide the HTTPS link: `https://yamsab.github.io/oatly-project/`.
+4. Wait for GitHub Pages to provide the HTTPS link: `https://yamsab.github.io/oatly-service-design/`.
 
 ### Microphone notes
 
@@ -43,7 +43,6 @@ The page includes an EN/SV switcher in the header. It updates navigation, produc
 
 The microphone defaults to independent English/Swedish speech recognition using the multilingual `onnx-community/whisper-tiny` model in Transformers.js/ONNX Runtime WebAssembly. Click the mic to download the model on first use (tens of MB), then speak for up to 14 seconds and press Stop. Audio is recorded and transcribed **inside the browser**; it is **not uploaded to a speech-recognition server**. The model and JavaScript are fetched from Hugging Face and jsDelivr on first use, subject to network access, browser memory and content-blocking settings. Select *Browser voice* to use the legacy Web Speech recognition service if preferred (which can fail in Brave). The model is small, so its accuracy may be limited, especially for Swedish. This requires HTTPS, supported WebAssembly/MediaRecorder APIs and device permission. Browser caching is used when available. No API key or paid server is configured.
 
+## Natural product guide (without an external AI API)
 
-## Conversation style and optional AI
-
-Ask Oatly now answers directly in English and Swedish (for example, 'iKaffe has 3.4 g sugars per 100 ml'). No repeated prototype disclaimers are placed in chat replies. By default, the site has a concise browser-based product-answer fallback. It is **not** a generative model until an external Cloudflare AI Worker is deployed and its URL is set in assistant-config.js. See cloudflare-ai/README.md for instructions. No API tokens should ever be committed to this public GitHub repository. When a Worker is connected, the browser sends the typed/transcribed chat and selection context to Cloudflare for the AI answer. Voice recognition remains separate, with independent Whisper and optional browser recognition.
+Ask Oatly answers concise product questions on this website in English and Swedish using the eight-product catalogue. It is a locally running, rule-based conversational guide, not a hosted generative AI model. It gives direct answers to sugar, fat, climate, organic, usage, retailer and comparison questions, while remembering the most recently discussed product for follow-ups. No chat API keys, account, or subscription are needed. The optional independent Whisper speech engine downloads its model on first use; speech recognition is separate from the local text guide.
