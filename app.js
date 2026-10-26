@@ -86,7 +86,7 @@ $('voice-help').addEventListener('click',explainVoice);
 $('voice-test').addEventListener('click',()=>{
  if(!('speechSynthesis' in window)){voiceStatus('⚠️ This browser does not support spoken replies.','warn');return}
  voiceAsked=true;
- readReply('Hi! I am the Oatly student prototype. You can speak or type your preferences, and I will help you compare products.');
+ readReply('Hi! What can I help you find?');
  voiceStatus('🔊 Speaker test started. If you hear nothing, check your device volume.');
 });
 $('voice-language').addEventListener('change',updateLocalVoiceButton);
