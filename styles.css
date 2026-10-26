@@ -25,3 +25,32 @@ button,input,select{font:inherit}button{cursor:pointer}button:disabled{cursor:no
 
 /* CSP-safe visual states */
 .no-underline{text-decoration:none}.mt8{margin-top:8px}.mt16{margin-top:16px}.is-hidden{display:none!important}.photo-fallback.is-visible{display:block!important}
+
+
+/* Product comparison guidance and retailer hand-off */
+.comparison-guidance{padding:14px 4px 12px;display:flex;flex-wrap:wrap;gap:9px;align-items:center}
+.comparison-guidance[hidden]{display:none}
+.comparison-guidance strong{font-size:14px;flex:0 0 100%;color:#144363}
+.comparison-guidance p{margin:0 0 4px;flex:0 0 100%;font-size:12px;color:#4a6678}
+.comparison-guidance button{border:1px solid #adcddc;background:#fff;color:#155178;font-size:12px;font-weight:750;border-radius:18px;padding:9px 13px;cursor:pointer}
+.comparison-guidance button:hover{background:#e5f5fd}
+.product-bottom{flex-wrap:wrap;justify-content:flex-start;gap:8px 14px}
+.product-bottom .where-product-button{color:#176742}
+.buy-panel{margin:20px 0;background:#fff9e8;border:1px solid #eadab5;border-radius:18px;padding:23px}
+.buy-heading h2{margin:4px 0 8px;color:#143d56;font-size:28px;letter-spacing:-.035em}
+.buy-heading p{margin:0 0 18px;font-size:13px;color:#516474}
+.buy-controls{display:grid;grid-template-columns:minmax(130px,1fr) minmax(150px,1fr) auto auto;align-items:end;gap:12px}
+.buy-controls label{display:flex;flex-direction:column;gap:6px;color:#294f60;font-size:12px;font-weight:700}
+.buy-controls input,.buy-controls select{width:100%;min-width:0;border:1px solid #d2d8da;background:#fff;border-radius:11px;color:#123c56;padding:12px 10px;font-size:13px}
+.buy-controls .btn{min-height:44px;white-space:nowrap;cursor:pointer}
+.buy-controls button:disabled{opacity:.6;cursor:wait}
+.buy-context{font-size:13px;margin:16px 0 12px;color:#426072}
+.retailer-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.retailer-card{border:1px solid #e7e3d6;background:#fff;border-radius:13px;padding:15px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.retailer-card h3{font-size:18px;margin:0;color:#183f58}
+.retailer-card p{font-size:11px;line-height:1.5;margin:0;color:#586d77;flex:1}
+.retailer-card a{font-size:12px;color:#125c83;font-weight:750;text-decoration:underline;text-underline-offset:3px}
+.buy-disclaimer{font-size:11px;color:#5e666c;line-height:1.6;margin:18px 0 0}
+#comparison,#where-to-buy{scroll-margin-top:18px}
+@media(max-width:1150px){.buy-controls{grid-template-columns:1fr 1fr}.retailer-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.buy-panel{padding:16px}.buy-controls{grid-template-columns:1fr}.retailer-cards{grid-template-columns:1fr}.comparison-guidance button{width:100%}.buy-heading h2{font-size:23px}}
