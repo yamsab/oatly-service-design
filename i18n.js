@@ -79,6 +79,24 @@
     ["Filters cleared","Filtren har återställts"],["Your picks are ready. Compare a few cartons, or ask a question.","Dina alternativ är klara. Jämför några produkter eller ställ en fråga."],
     ["Thank you! That helps us understand what feels useful.","Tack! Det hjälper oss att förstå vad som fungerar."],["Thank you! This is an invitation to test improvements with real users, not a live feedback service.","Tack! Det här är en demo för användartestning, inte en aktiv feedbacktjänst."]
   ];
+  enSv.push(
+    ["ZERO SUGARS","UTAN SOCKER"],["COFFEE FAVORITE","KAFFEFAVORIT"],["LIGHTER TASTE","LÄTTARE SMAK"],
+    ["ORGANIC","EKOLOGISK"],["ORGANIC COFFEE","EKOLOGISKT KAFFE"],["HIGH FIBER","HÖGT FIBERINNEHÅLL"],
+    ["VANILLA","VANILJ"],["CHOCOLATE","CHOKLAD"],["Feature","Egenskap"],
+    ["Havredryck No Sugars","Havredryck No Sugars"],
+    ["Share your impression","Dela din upplevelse"],
+    ["Organic ingredients","Ekologiska ingredienser"],
+    ["not listed on source","saknas i källan"],["Not listed on source","Saknas i källan"],
+    ["View current comparison","Visa aktuell jämförelse"],["Coffee options","Alternativ till kaffe"],
+    ["Compare suggestions","Jämför förslag"],["Compare my selected products","Jämför mina valda produkter"],
+    ["Climate: not listed","Klimat: saknas"],
+    ["Source: use the product page link for the full Swedish ingredient list.","Källa: se den fullständiga ingredienslistan på Oatlys produktsida."],
+    ["Not reported in this demo","Inte redovisat i den här demon"],
+    ["Choose a product checkbox first","Markera en produkt först"],
+    ["No products match all your filters","Inga produkter matchar alla dina filter"],
+    ["Source","Källa"],["Ingredients","Ingredienser"],
+    ["0 g sugars","0 g sockerarter"]
+  );
   const dictionary = new Map(enSv);
   let locale = 'en';
   const savedTexts = new WeakMap(), savedAttrs = new WeakMap();
@@ -102,8 +120,13 @@
     if ((m=value.match(/^Search around (.+) \(Maps\) ↗$/))) return 'Sök nära ' + m[1] + ' (Kartor) ↗';
     if ((m=value.match(/^Compare (.+)$/))) return 'Jämför ' + m[1];
     if ((m=value.match(/^CO₂e (.+)$/))) return 'CO₂e ' + m[1];
+    if ((m=value.match(/^Compare (.+) carton$/))) return 'Jämför ' + m[1];
+    if ((m=value.match(/^No products match all your filters/))) return 'Inga produkter matchar alla dina filter.';
+    if ((m=value.match(/^Choose a product checkbox first$/))) return 'Markera en produkt först';
+    if ((m=value.match(/^([\d]+) products match your filters$/))) return m[1]+' produkter matchar dina filter';
     if (/^No products match/.test(value)) return value.replace(/^No products match all your filters\./,'Inga produkter matchar alla dina filter.');
     if ((m=value.match(/^Choose up to (\d+) products\. Remove one to add another\.$/))) return 'Välj högst ' + m[1] + ' produkter. Ta bort en för att lägga till en ny.';
+    if (/^(coffee|cooking|baking|drinking|smoothies)(, (coffee|cooking|baking|drinking|smoothies))*$/.test(value)) return value.split(', ').map(x=>dictionary.get(x)||x).join(', ');
     const segments = value.split(' · ');
     if (segments.length > 1) return segments.map(s=>dictionary.get(s)||s.replace(/^Sugar /,'Socker ').replace(/^Fat /,'Fett ')).join(' · ');
     return value;
