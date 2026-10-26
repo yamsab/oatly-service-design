@@ -58,23 +58,161 @@ function submitChat(text){const message=String(text||'').trim().slice(0,400);if(
 function voiceStatus(message,kind='info'){$('voice-status').textContent=message;$('voice-status').dataset.kind=kind}
 function finishListening(){listening=false;$('mic').textContent='🎙';$('mic').setAttribute('aria-pressed','false');$('mic').setAttribute('aria-label','Start voice input');}
 function readReply(text){if(!('speechSynthesis' in window))return;try{window.speechSynthesis.cancel();const spoken=new SpeechSynthesisUtterance(text.replace(/https?:\/\/\S+/g,'').replace(/\n/g,'. ').slice(0,450));spoken.lang=$('voice-language').value;spoken.rate=.97;spoken.pitch=1;spoken.onend=()=>voiceStatus('✅ Finished speaking. Tap the mic again, or type your next question.');spoken.onerror=()=>voiceStatus('🔊 Audio response was unavailable. You can still read the reply.','warn');window.speechSynthesis.speak(spoken)}catch(_){voiceStatus('🔊 Spoken replies unavailable in this browser.','warn')}}
-function explainVoice(){const localPage=location.protocol==='file:'||location.protocol==='content:'||!window.isSecureContext;if(localPage){voiceStatus('⚠️ This page was opened as a local file. For microphone input, publish the prototype to an HTTPS site and open that link in Chrome. You can still type or use your phone keyboard microphone here.','warn')}else{voiceStatus('ℹ️ In Chrome: tap the icon beside the HTTPS address → Permissions / Site settings → Microphone → Allow; then reload. Also check Android Settings → Apps → Chrome → Permissions → Microphone. Try typing if speech recognition is unsupported.','warn')}}
+function speechConstructor(){return window.SpeechRecognition||window.webkitSpeechRecognition}
+let localSpeechLanguage=null;
+let speechStarting=false;
+function localVoiceAvailableInBrowser(){
+ const Speech=speechConstructor();
+ if(!Speech || typeof Speech.available!=='function')return false;
+ try{return 'processLocally' in new Speech()}catch(_){return false}
+}
+function updateLocalVoiceButton(){
+ const button=$('voice-local');
+ button.hidden=!localVoiceAvailableInBrowser();
+ if(!button.hidden){
+   button.textContent=localSpeechLanguage===$('voice-language').value?'✓ On-device speech ready':'Use on-device speech';
+   button.setAttribute('aria-pressed',String(localSpeechLanguage===$('voice-language').value));
+ }
+}
+function explainVoice(){
+ const localPage=location.protocol==='file:'||location.protocol==='content:'||!window.isSecureContext;
+ if(localPage){
+   voiceStatus('⚠️ Open the published HTTPS website for voice recognition. You can still type or use your device keyboard microphone.','warn');
+ }else{
+   voiceStatus('ℹ️ Allow microphone access in your browser’s site settings. Speech recognition may also require access to your browser provider’s online service. If the service fails, retry once, try a supported browser, use the on-device option if available, or dictate with your keyboard microphone. The text assistant continues working.','info');
+ }
+}
 $('voice-help').addEventListener('click',explainVoice);
-$('voice-test').addEventListener('click',()=>{if(!('speechSynthesis' in window)){voiceStatus('⚠️ This browser does not support spoken replies.','warn');return}voiceAsked=true;readReply('Hi! I am the Oatly student prototype. You can speak or type your preferences, and I will help you compare products.');voiceStatus('🔊 Speaker test started. If you hear nothing, check the phone volume and media audio.');});
-$('mic').addEventListener('click',()=>{
- if(listening&&speechRecognizer){speechRecognizer.stop();voiceStatus('⏹ Listening stopped.');finishListening();return}
- if(location.protocol==='file:'||location.protocol==='content:'||!window.isSecureContext){voiceStatus('⚠️ This downloaded HTML file is not an HTTPS website. For microphone input, upload the prototype to an HTTPS host and open that link in Chrome. For now, use your keyboard microphone or type.','warn');return}
- const Speech=window.SpeechRecognition||window.webkitSpeechRecognition;
- if(!Speech){voiceStatus('⚠️ Speech recognition isn’t supported in this browser. Try Chrome over HTTPS, or use the microphone on your phone’s keyboard.','warn');notify('Voice recognition is not available here — see Voice help.');return}
+$('voice-test').addEventListener('click',()=>{
+ if(!('speechSynthesis' in window)){voiceStatus('⚠️ This browser does not support spoken replies.','warn');return}
+ voiceAsked=true;
+ readReply('Hi! I am the Oatly student prototype. You can speak or type your preferences, and I will help you compare products.');
+ voiceStatus('🔊 Speaker test started. If you hear nothing, check your device volume.');
+});
+$('voice-language').addEventListener('change',updateLocalVoiceButton);
+$('voice-local').addEventListener('click',async()=>{
+ const Speech=speechConstructor();
+ if(!localVoiceAvailableInBrowser()){
+   voiceStatus('⚠️ On-device speech recognition is not available in this browser. Try Chrome or use the keyboard microphone.','warn');return;
+ }
+ const lang=$('voice-language').value;
+ const btn=$('voice-local');
+ if(localSpeechLanguage===lang){
+   localSpeechLanguage=null;
+   updateLocalVoiceButton();
+   voiceStatus('ℹ️ On-device mode switched off. The microphone will use the browser speech service.','info');
+   return;
+ }
+ btn.disabled=true;
+ voiceStatus('ℹ️ Checking whether this browser supports on-device recognition for '+lang+'…','info');
  try{
-  if('speechSynthesis' in window)window.speechSynthesis.cancel();
-  const speech=new Speech();speechRecognizer=speech;speech.lang=$('voice-language').value;speech.interimResults=true;speech.continuous=false;speech.maxAlternatives=1;
-  let finalWords='';speech.onstart=()=>{listening=true;voiceAsked=true;$('mic').textContent='■';$('mic').setAttribute('aria-pressed','true');$('mic').setAttribute('aria-label','Stop voice input');voiceStatus('🔴 Listening… Say something like “I need oat milk with no sugar for coffee”.','listening')};
-  speech.onresult=e=>{let interim='';for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)finalWords+=e.results[i][0].transcript+' ';else interim+=e.results[i][0].transcript}if(interim)voiceStatus('🎙 Heard: '+interim,'listening');if(finalWords.trim()){$('chat-input').value='';submitChat(finalWords.trim());finalWords='';voiceStatus('✅ Heard you! Preparing a response…')}};
-  speech.onerror=e=>{const errors={'not-allowed':'Microphone permission denied. In Chrome, open Site settings → Microphone → Allow for this HTTPS site, then reload. Also check Android Settings → Apps → Chrome → Permissions → Microphone.','service-not-allowed':'Speech service is blocked here. Check Chrome microphone permissions and try a supported browser.','no-speech':'I didn’t hear anything. Try speaking closer to your mic.','audio-capture':'No working microphone was found.','network':'Speech service network error. Check your connection and retry.','aborted':'Listening stopped.'};voiceStatus('⚠️ '+(errors[e.error]||('Voice error: '+e.error))+' You can type your request instead.','warn');finishListening()};
-  speech.onend=()=>{finishListening();if($('voice-status').dataset.kind==='listening')voiceStatus('🎙 Listening ended. Tap the mic to speak again.')};
-  speech.start();voiceStatus('🎙 Starting the microphone…','listening')
- }catch(e){finishListening();voiceStatus('⚠️ Could not start the microphone. Try Chrome with HTTPS, check permissions, or type below.','warn')}
+   const status=await Speech.available({langs:[lang],processLocally:true});
+   if(status==='available'){
+     localSpeechLanguage=lang;
+     voiceStatus('✅ On-device speech ready for '+lang+'. Tap the microphone to try it.','info');
+   }else if((status==='downloadable'||status==='downloading') && typeof Speech.install==='function'){
+     voiceStatus('ℹ️ The '+lang+' on-device speech pack must be installed. Your browser will handle its download.','info');
+     const installed=await Speech.install({langs:[lang]});
+     if(installed){
+       localSpeechLanguage=lang;
+       voiceStatus('✅ On-device speech installed for '+lang+'. Tap the microphone to try it.','info');
+     }else{
+       voiceStatus('⚠️ The on-device language pack could not be installed. You can type or use the browser speech service.','warn');
+     }
+   }else{
+     voiceStatus('⚠️ On-device speech is unavailable for '+lang+' in this browser. Try another supported browser or your keyboard microphone.','warn');
+   }
+ }catch(_){
+   voiceStatus('⚠️ The browser could not enable on-device recognition. Its feature or language pack may be blocked or unsupported. The text assistant still works.','warn');
+ }finally{
+   btn.disabled=false;
+   updateLocalVoiceButton();
+ }
+});
+updateLocalVoiceButton();
+$('mic').addEventListener('click',()=>{
+ if(listening&&speechRecognizer){
+   speechRecognizer.stop();
+   voiceStatus('⏹ Listening stopped.','info');
+   finishListening();
+   return;
+ }
+ if(speechStarting)return;
+ if(location.protocol==='file:'||location.protocol==='content:'||!window.isSecureContext){
+   voiceStatus('⚠️ Voice input needs a secure HTTPS page. Open the published website or use your keyboard microphone.','warn');return;
+ }
+ const Speech=speechConstructor();
+ if(!Speech){
+   voiceStatus('⚠️ Speech recognition is not supported by this browser. You can type or use your keyboard microphone instead.','warn');return;
+ }
+ const language=$('voice-language').value;
+ let speech;
+ try{speech=new Speech()}catch(_){
+   voiceStatus('⚠️ Unable to initialise browser speech recognition. Try a supported browser or type your question.','warn');return;
+ }
+ const usingLocal=localSpeechLanguage===language&&('processLocally' in speech);
+ try{if(usingLocal)speech.processLocally=true}catch(_){}
+ speechRecognizer=speech;
+ speech.lang=language;
+ speech.interimResults=true;
+ speech.continuous=false;
+ speech.maxAlternatives=1;
+ speechStarting=true;
+ let finalWords='';
+ speech.onstart=()=>{
+   speechStarting=false;
+   listening=true;
+   voiceAsked=true;
+   $('mic').textContent='■';
+   $('mic').setAttribute('aria-pressed','true');
+   $('mic').setAttribute('aria-label','Stop voice input');
+   voiceStatus('🔴 Listening… Speak a product preference, such as “no sugar and low fat”.','listening');
+ };
+ speech.onresult=e=>{
+   let interim='';
+   for(let i=e.resultIndex;i<e.results.length;i++){
+     if(e.results[i].isFinal)finalWords+=e.results[i][0].transcript+' ';
+     else interim+=e.results[i][0].transcript;
+   }
+   if(interim)voiceStatus('🎙 Heard: '+interim,'listening');
+   if(finalWords.trim()){
+     $('chat-input').value='';
+     const recognized=finalWords.trim();
+     finalWords='';
+     submitChat(recognized);
+     voiceStatus('✅ Heard you! Preparing a response…','info');
+   }
+ };
+ speech.onerror=e=>{
+   speechStarting=false;
+   const errors={
+     'not-allowed':'Microphone permission was denied. Allow it in your browser site settings, then retry.',
+     'service-not-allowed':'This browser or device does not allow its speech service. Try a supported browser or device keyboard dictation.',
+     'no-speech':'No speech was detected. Try speaking closer to the microphone.',
+     'audio-capture':'No working microphone was detected. Check device and browser permissions.',
+     'language-not-supported':'Speech recognition is not available for the selected language in this browser.',
+     'network':usingLocal
+       ? 'The on-device speech engine could not start. Try switching off on-device mode or use keyboard dictation.'
+       : 'Your browser speech-recognition service could not be reached. This does not mean the Oatly website is offline. Try again, use the on-device option if offered, or use your keyboard microphone.',
+     'aborted':'Listening was stopped.'
+   };
+   voiceStatus('⚠️ '+(errors[e.error]||('Speech recognition error: '+e.error))+' Text chat is still available.','warn');
+   finishListening();
+ };
+ speech.onend=()=>{
+   speechStarting=false;
+   finishListening();
+   if($('voice-status').dataset.kind==='listening')voiceStatus('🎙 Listening ended. Tap the microphone to try again.','info');
+ };
+ try{
+   if('speechSynthesis' in window)window.speechSynthesis.cancel();
+   speech.start();
+   voiceStatus('🎙 Starting '+(usingLocal?'on-device ':'')+'speech recognition…','listening');
+ }catch(_){
+   speechStarting=false;
+   finishListening();
+   voiceStatus('⚠️ Could not start speech recognition. Check browser support and microphone permissions, or type below.','warn');
+ }
 });
 $('speak-replies').addEventListener('change',e=>{if(!e.target.checked&&'speechSynthesis' in window)window.speechSynthesis.cancel();voiceStatus(e.target.checked?'🔊 Replies can be spoken after you use the microphone.':'🔇 Spoken replies turned off.')});
 
