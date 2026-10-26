@@ -98,6 +98,7 @@
     ["0 g sugars","0 g sockerarter"]
   );
   enSv.push(['Use on-device speech','Använd lokal taligenkänning'],['✓ On-device speech ready','✓ Lokal taligenkänning klar']);
+  enSv.push(['Hi! What can I help you find?','Hej! Vad vill du hitta?'],['Product guide · English / Svenska','Produktguide · svenska / engelska'],['Ask Oatly helps you compare products and gives simple, direct answers. Ask a question in English or Swedish, without filling in the filters first.','Fråga Oatly hjälper dig att jämföra produkter och ger enkla, raka svar. Ställ en fråga på svenska eller engelska utan att först använda filtren.']);
   const dictionary = new Map(enSv);
   let locale = 'en';
   const savedTexts = new WeakMap(), savedAttrs = new WeakMap();
@@ -199,8 +200,8 @@
     const welcome=document.createElement('div');
     welcome.className='msg bot';
     welcome.textContent=locale==='sv'
-      ?'Hej! 👋 Du kan ställa frågor direkt på svenska, till exempel: ”Jag vill ha sockerfritt, lite fett och lägre klimatavtryck.” Jag kan även hjälpa dig att jämföra de produkter du valt.'
-      :"Hi! 👋 Ask directly in English, for example: “I'd like zero sugar, low fat, and lower climate impact.” I can also explain your selected comparison.";
+      ?'Hej! Vad vill du hitta?'
+      :'Hi! What can I help you find?';
     $('messages').appendChild(welcome);
     $('voice-status').textContent=locale==='sv'?'🎤 Skriv på svenska eller tryck på mikrofonen.':'🎤 Type in English or tap the microphone.';
     translateElement(document.body);
