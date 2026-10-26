@@ -46,3 +46,8 @@ The microphone defaults to independent English/Swedish speech recognition using 
 ## Natural product guide (without an external AI API)
 
 Ask Oatly answers concise product questions on this website in English and Swedish using the eight-product catalogue. It is a locally running, rule-based conversational guide, not a hosted generative AI model. It gives direct answers to sugar, fat, climate, organic, usage, retailer and comparison questions, while remembering the most recently discussed product for follow-ups. No chat API keys, account, or subscription are needed. The optional independent Whisper speech engine downloads its model on first use; speech recognition is separate from the local text guide.
+
+
+## Smart product filtering
+
+Every filter option shows how many of the eight catalogue products match **that option together with all the other current filters**. Zero-result options are still clickable so users can change selections. When a combination has no exact match, the site displays up to three *real* closest products with the specific selected filters they do not meet, and offers to show a product by clearing only its conflicting filters. This is supported in English and Swedish. No fictional products are introduced to fill impossible combinations.
