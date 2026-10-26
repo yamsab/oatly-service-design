@@ -86,19 +86,29 @@
       if(zero.length>1)return tr(zero.map(x=>x.short).join(' and ')+' both have 0 g sugars per 100 ml.',
         zero.map(x=>x.short).join(' och ')+' har båda 0 g sockerarter per 100 ml.');
     }
+    if(q.organic&&!q.choose&&!q.zero&&!q.sugar&&!q.fat&&!q.climate&&!q.coffee&&!q.cooking&&!q.baking){
+      const matches=choices.filter(p=>p.organic);
+      if(matches.length)return tr(matches.map(p=>p.name).join(' and ')+' are organic.',
+        matches.map(p=>p.name).join(' och ')+' är ekologiska.');
+    }
     const criteria=q.zero||q.sugar||q.fat||q.climate||q.organic||q.coffee||q.cooking||q.baking;
     if(criteria){
       const sorted=choices.sort((a,b)=>rankValue(b,q)-rankValue(a,q)||a.sugar-b.sugar);
       const best=sorted[0];
       lastProduct=best.id;
-      const facts=[];
-      if(q.sugar||q.zero)facts.push(tr('sugars ','sockerarter ')+number(best.sugar)+' g');
-      if(q.fat)facts.push(tr('fat ','fett ')+number(best.fat)+' g');
-      if(q.climate)facts.push(best.climate===null?tr('climate figure not available','klimatvärde saknas'):tr('climate ','klimat ')+number(best.climate)+' kg CO₂e/kg');
-      if(q.organic)facts.push(best.organic?tr('organic','ekologisk'):tr('not organic','inte ekologisk'));
-      if(q.coffee)facts.push(tr('suitable for coffee','passar för kaffe'));
-      const warning=q.zero&&best.sugar!==0?tr(' It is not sugar-free.',' Den är inte sockerfri.'):'';
-      return tr("I'd choose "+best.name,'Jag skulle välja '+best.name)+(facts.length?': '+facts.join(', '):'')+'.'+warning;
+      const nutrients=[];
+      if(q.sugar||q.zero)nutrients.push(number(best.sugar)+tr(' g sugars',' g sockerarter'));
+      if(q.fat)nutrients.push(number(best.fat)+tr(' g fat',' g fett'));
+      const sentences=[tr("I'd go with "+best.name+'.','Jag skulle välja '+best.name+'.')];
+      if(nutrients.length)sentences.push(tr('It has ','Den innehåller ')+nutrients.join(tr(' and ',' och '))+' per 100 ml.');
+      if(q.climate)sentences.push(best.climate===null?
+        tr('I do not have a reported climate figure for it.','Jag har inget redovisat klimatvärde för den.'):
+        tr('Its reported climate footprint is ','Det redovisade klimatavtrycket är ')+number(best.climate)+' kg CO₂e/kg.');
+      if(q.organic)sentences.push(best.organic?tr('It is organic.','Den är ekologisk.'):
+        tr('It is not labelled organic.','Den är inte märkt som ekologisk.'));
+      if(q.coffee)sentences.push(tr('It is suitable for coffee.','Den passar till kaffe.'));
+      if(q.zero&&best.sugar!==0)sentences.push(tr('It is not sugar-free.','Den är inte sockerfri.'));
+      return sentences.join(' ');
     }
     if(q.choose){
       const sugar=choices.slice().sort((a,b)=>a.sugar-b.sugar)[0];
