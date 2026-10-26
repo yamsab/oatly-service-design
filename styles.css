@@ -54,3 +54,13 @@ button,input,select{font:inherit}button{cursor:pointer}button:disabled{cursor:no
 #comparison,#where-to-buy{scroll-margin-top:18px}
 @media(max-width:1150px){.buy-controls{grid-template-columns:1fr 1fr}.retailer-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.buy-panel{padding:16px}.buy-controls{grid-template-columns:1fr}.retailer-cards{grid-template-columns:1fr}.comparison-guidance button{width:100%}.buy-heading h2{font-size:23px}}
+
+
+/* Accessible EN / SV website language control */
+.site-language-switch{display:inline-flex;align-items:center;flex-shrink:0;gap:2px;padding:3px;border-radius:22px;background:#eff6fa;border:1px solid #b9d2e1}
+.site-language-switch button{border:0;border-radius:18px;padding:7px 10px;background:transparent;color:#32627d;font-size:12px;font-weight:900;letter-spacing:.03em;cursor:pointer}
+.site-language-switch button[aria-pressed="true"]{background:#0e537e;color:white;box-shadow:0 1px 4px #0c45602b}
+.site-language-switch button:focus-visible{outline:2px solid #025b99;outline-offset:3px}
+.header-end{flex-wrap:wrap;justify-content:flex-end}
+@media(max-width:950px){.site-language-switch{order:-1}}
+@media(max-width:600px){.site-language-switch button{font-size:11px;padding:6px 9px}}
