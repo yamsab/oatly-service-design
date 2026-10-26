@@ -56,10 +56,11 @@
     if(q.hello)return tr('Hi! What can I help you find?','Hej! Vad vill du hitta?');
     if(q.thank)return tr("You're welcome!",'Varsågod!');
     const mentioned=named(question);
-    const pronoun=/\b(it|this|that|one|its)\b|den här|denna|den|det/.test(question.toLowerCase());
-    const p=mentioned||(pronoun?(byId(lastProduct)||(selected.length===1?byId(selected[0]):null)):null);
+    const pronoun=/\b(it|this|that|one|its)\b|den här|denna produkt|den\b|har det\b|innehåller det\b/.test(question.toLowerCase());
+    const contextFollowup=/^(how much|hur mycket|sugar\?|fat\?|socker\?|fett\?)/i.test(question.trim());
+    const p=mentioned||((pronoun||contextFollowup)?(byId(lastProduct)||(selected.length===1?byId(selected[0]):null)):null);
     if(q.shop)return tr('You can look on ICA, Coop, Hemköp or Willys through Where to Buy. Stock is not verified.','Du kan söka hos ICA, Coop, Hemköp eller Willys via Var du kan köpa. Lagerstatus är inte bekräftad.');
-    if(q.ingredient&&p){lastProduct=p.id;return tr(p.name+' lists: '+p.ingredients+' Check the full label for current details.',
+    if(q.ingredient&&p&&!q.sugar&&!q.zero&&!q.fat&&!q.climate){lastProduct=p.id;return tr(p.name+' lists: '+p.ingredients+' Check the full label for current details.',
       'Ingredienser för '+p.name+': '+p.ingredients+' Kontrollera hela listan på förpackningen.');}
     if(p&&!q.choose){
       lastProduct=p.id;
@@ -97,7 +98,7 @@
       if(q.organic)facts.push(best.organic?tr('organic','ekologisk'):tr('not organic','inte ekologisk'));
       if(q.coffee)facts.push(tr('suitable for coffee','passar för kaffe'));
       const warning=q.zero&&best.sugar!==0?tr(' It is not sugar-free.',' Den är inte sockerfri.'):'';
-      return tr("I'd choose "+best.short,'Jag skulle välja '+best.short)+(facts.length?': '+facts.join(', '):'')+'.'+warning;
+      return tr("I'd choose "+best.name,'Jag skulle välja '+best.name)+(facts.length?': '+facts.join(', '):'')+'.'+warning;
     }
     if(q.choose){
       const sugar=choices.slice().sort((a,b)=>a.sugar-b.sugar)[0];
