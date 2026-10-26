@@ -37,3 +37,8 @@ Designed for **GM1121 Service Design – Applied Consumer Behaviour**, as a prac
 ## English and Swedish (EN / SV)
 
 The page includes an EN/SV switcher in the header. It updates navigation, product filters, comparisons, Where to Buy, and the guided Ask Oatly assistant. Speech input defaults to the selected website language (when supported by the browser). The assistant is **rule-based**, not a hosted generative AI model; no translation service, API key or account is required. Switching the language starts a new on-page chat so previous replies are not misleadingly shown in the wrong language. Retailer links are illustrative and are not verified stock or price listings.
+
+
+## Independent on-device speech recognition (Brave-compatible approach)
+
+The microphone defaults to independent English/Swedish speech recognition using the multilingual `onnx-community/whisper-tiny` model in Transformers.js/ONNX Runtime WebAssembly. Click the mic to download the model on first use (tens of MB), then speak for up to 14 seconds and press Stop. Audio is recorded and transcribed **inside the browser**; it is **not uploaded to a speech-recognition server**. The model and JavaScript are fetched from Hugging Face and jsDelivr on first use, subject to network access, browser memory and content-blocking settings. Select *Browser voice* to use the legacy Web Speech recognition service if preferred (which can fail in Brave). The model is small, so its accuracy may be limited, especially for Swedish. This requires HTTPS, supported WebAssembly/MediaRecorder APIs and device permission. Browser caching is used when available. No API key or paid server is configured.
