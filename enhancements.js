@@ -190,8 +190,8 @@
   function evaluate(p,q) {
     let score = 0; const yes = [], no = [], unknown = [];
     if (q.zero) { if (p.sugar === 0) {score += 12;yes.push('0 g sugars');} else {score -= 12;no.push(fmt(p.sugar) + ' g sugars, not sugar-free');} }
-    else if (q.sugar) {if (p.sugar <= 3.5) {score += 8;yes.push(fmt(p.sugar) + ' g sugars');} else {score -= 8;no.push(fmt(p.sugar) + ' g sugars');}}
-    if (q.fat) {if (p.fat <= 1.5) {score += 10;yes.push(fmt(p.fat) + ' g fat');} else {score -= 10;no.push(fmt(p.fat) + ' g fat');}}
+    else if (q.sugar) {if (p.sugar <= 3.5) {score += 8 + (3.5 - p.sugar) * 1.5;yes.push(fmt(p.sugar) + ' g sugars');} else {score -= 8;no.push(fmt(p.sugar) + ' g sugars');}}
+    if (q.fat) {if (p.fat <= 1.5) {score += 10 + (1.5 - p.fat) * 4;yes.push(fmt(p.fat) + ' g fat');} else {score -= 10;no.push(fmt(p.fat) + ' g fat');}}
     if (q.organic) {if (p.organic) {score += 10;yes.push('organic');} else {score -= 10;no.push('not labelled organic');}}
     if (q.purpose) {if (p.purposes.includes(q.purpose)) {score += 6;yes.push('listed for ' + q.purpose);} else {score -= 6;no.push('not listed for ' + q.purpose);}}
     if (q.flavour) {if (p.flavour === q.flavour) {score += 8;yes.push(q.flavour + ' flavour');} else {score -= 8;no.push('different flavour');}}
@@ -263,8 +263,9 @@
     const s = input.trim().toLowerCase();
     const shopping = /\b(where to buy|where can i buy|where can i find|near me|retailer|supermarket|shop|shopping|stock|in stock|hemköp|hemkop|willys|ica|coop|butik|affär|köpa|handla)\b/.test(s);
     if (shopping) {
+      const named = products.find(function (p) { return s.includes(p.name.toLowerCase()) || (p.short.length > 5 && s.includes(p.short.toLowerCase())); });
       addMessage('I can take you to retailer websites or official store finders, but this prototype cannot confirm stock, prices, or whether a particular store carries your Oatly choice. Choose a product and optionally enter a city or postcode.', 'bot');
-      actions([['Open Where to Buy',function () {showBuy(selected[0] || retailerProduct);}]]);
+      actions([['Open Where to Buy',function () {showBuy(named ? named.id : (selected[0] || retailerProduct));}]]);
       return;
     }
     const q = parsePreferences(s);
@@ -294,5 +295,10 @@
     b.addEventListener('click',function () {submitChat(entry[1]);});
     quick.appendChild(b);
   });
+  const previousDetails = showDetails;
+  showDetails = function (id) {
+    previousDetails(id);
+    actions([['Where to Buy this product',function () {showBuy(id);}] ]);
+  };
   render(); // Refresh existing cards and enhanced comparison when loaded.
 })();
