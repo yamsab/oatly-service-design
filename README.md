@@ -32,3 +32,8 @@ Designed for **GM1121 Service Design – Applied Consumer Behaviour**, as a prac
 - Products and details are illustrative samples; verify current descriptions, ingredient/nutrition and footprint data against original Oatly sources before citing them in a report.
 - The assistant does not check real-time store stock, location, or pricing.
 - The prototype does not submit orders or collect account details.
+
+
+## English and Swedish (EN / SV)
+
+The page includes an EN/SV switcher in the header. It updates navigation, product filters, comparisons, Where to Buy, and the guided Ask Oatly assistant. Speech input defaults to the selected website language (when supported by the browser). The assistant is **rule-based**, not a hosted generative AI model; no translation service, API key or account is required. Switching the language starts a new on-page chat so previous replies are not misleadingly shown in the wrong language. Retailer links are illustrative and are not verified stock or price listings.
