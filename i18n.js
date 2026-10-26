@@ -321,6 +321,26 @@
       $('where-to-buy').scrollIntoView({behavior:'smooth'});
     }],['Officiell produktsida ↗',()=>window.open(p.url,'_blank','noopener')]]);
   };
+  // Keep spoken-assistant controls and browser voice errors understandable in both languages.
+  const originalVoiceStatus=voiceStatus;
+  voiceStatus=function(message,kind) {
+    if(locale==='sv') {
+      const translated=toSwedish(message);
+      if(translated!==message)message=translated;
+      else if(message.startsWith('🎙 Heard: '))message='🎙 Uppfattat: '+message.slice(10);
+      else if(message.startsWith('✅ Heard you!'))message='✅ Jag hörde dig! Förbereder svar …';
+      else if(message.startsWith('✅ Finished speaking.'))message='✅ Uppläsningen är klar. Prata eller skriv din nästa fråga.';
+      else if(message.startsWith('🔊 Speaker test started.'))message='🔊 Ljudtestet har startat. Kontrollera volymen om du inte hör något.';
+      else if(message.startsWith('⚠️'))message='⚠️ Talfunktionen är inte tillgänglig just nu. Kontrollera webbläsarens mikrofonbehörighet eller skriv din fråga.';
+      else if(message.startsWith('ℹ️'))message='ℹ️ Kontrollera mikrofonbehörigheten för den här webbplatsen i webbläsarens inställningar, eller skriv din fråga.';
+      else if(message.startsWith('🔊'))message='🔊 Uppläsning är inte tillgänglig just nu. Du kan läsa svaret i chatten.';
+      else if(message.startsWith('🎙'))message='🎙 Tryck på mikrofonen för att prata eller skriv din fråga.';
+      else if(message.startsWith('⏹'))message='⏹ Lyssningen stoppades.';
+      else if(message.startsWith('🔇'))message='🔇 Uppläsning är avstängd.';
+    }
+    return originalVoiceStatus(message,kind);
+  };
+
   // Voice selection follows the active website language; users can still choose an input locale manually.
   window.OatlyLanguage={getLanguage:()=>locale,setLanguage:setLanguage,translate:toSwedish};
 })();
