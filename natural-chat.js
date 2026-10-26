@@ -1,23 +1,22 @@
 'use strict';
-/* Direct, friendly product answers. Optional Cloudflare Workers AI when configured. */
+/* Concise, bilingual product answers. Works locally without an external chat API. */
 (function(){
   const byId=id=>products.find(p=>p.id===id);
   const sw=()=>window.OatlyLanguage?.getLanguage?.()==='sv';
   const tr=(en,sv)=>sw()?sv:en;
   const number=n=>typeof n==='number'?new Intl.NumberFormat(sw()?'sv-SE':'en-US',{maximumFractionDigits:2}).format(n):'–';
   let lastProduct=null;
-  let history=[];
-  const originalAnswer=respond;
+  // The current product is remembered for natural follow-up questions.
   function named(text){
     const s=text.toLocaleLowerCase();
     const names=products.flatMap(p=>[{p,match:p.name.toLocaleLowerCase()},{p,match:p.short.toLocaleLowerCase()}])
-      .filter(x=>x.match.length>5).sort((a,b)=>b.match.length-a.match.length);
+      .filter(x=>x.match.length>5 && !['organic','chocolate','vanilla','fiber low-calorie'].includes(x.match)).sort((a,b)=>b.match.length-a.match.length);
     const found=names.find(x=>s.includes(x.match));
     if(found)return found.p;
     const aliases=[['ikaffe light','light'],['i kaffe light','light'],['no sugars','nosugar'],
       ['fiber low-calorie','fiber'],['fiber low calorie','fiber'],['i kaffe','ikaffe'],
       ['ikaffe','ikaffe'],['choklad','choc'],['chocolate','choc'],['vanilla','vanilla']];
-    const a=aliases.find(x=>s.includes(x[0]));
+    const a=aliases.find(x=>s.includes(x[0]) && !(x[0]==='no sugars' && /(?:^|\s)(?:do you have|which|show me|find|finns det|vilka|visa)/.test(s)));
     return a?byId(a[1]):null;
   }
   function parse(question){
@@ -91,9 +90,24 @@
       if(matches.length)return tr(matches.map(p=>p.name).join(' and ')+' are organic.',
         matches.map(p=>p.name).join(' och ')+' är ekologiska.');
     }
+    const listing=/(which products|what products|what options|do you have|show me|list|any products|anything with|are there|finns det|vilka produkter|visa|har ni|vilka alternativ)/i.test(question);
+    if(listing && q.zero && !q.fat && !q.climate && !q.organic && !q.coffee && !q.cooking && !q.baking) {
+      const zero=choices.filter(p=>p.sugar===0);
+      if(zero.length)return tr(zero.map(p=>p.short).join(' and ')+' both have 0 g sugars per 100 ml.',
+        zero.map(p=>p.short).join(' och ')+' har båda 0 g sockerarter per 100 ml.');
+    }
+    if(listing && q.organic && !q.zero && !q.sugar && !q.fat && !q.climate && !q.coffee && !q.cooking && !q.baking) {
+      const organic=choices.filter(p=>p.organic);
+      if(organic.length)return tr(organic.map(p=>p.name).join(' and ')+' are organic.',
+        organic.map(p=>p.name).join(' och ')+' är ekologiska.');
+    }
     const criteria=q.zero||q.sugar||q.fat||q.climate||q.organic||q.coffee||q.cooking||q.baking;
     if(criteria){
-      const sorted=choices.sort((a,b)=>rankValue(b,q)-rankValue(a,q)||a.sugar-b.sugar);
+      // Explicit requirements always outrank softer preferences; unknown climate is not zero.
+      let eligible=choices.filter(p=>(!q.zero||p.sugar===0)&&(!q.organic||p.organic));
+      if(!eligible.length)return tr('None of these products meets all those requirements.','Ingen av de här produkterna uppfyller alla de önskemålen.');
+      eligible.sort((a,b)=>rankValue(b,q)-rankValue(a,q)||a.sugar-b.sugar);
+      const sorted=eligible;
       const best=sorted[0];
       lastProduct=best.id;
       const nutrients=[];
@@ -107,7 +121,8 @@
       if(q.organic)sentences.push(best.organic?tr('It is organic.','Den är ekologisk.'):
         tr('It is not labelled organic.','Den är inte märkt som ekologisk.'));
       if(q.coffee)sentences.push(tr('It is suitable for coffee.','Den passar till kaffe.'));
-      if(q.zero&&best.sugar!==0)sentences.push(tr('It is not sugar-free.','Den är inte sockerfri.'));
+      if(q.climate && q.zero && eligible.some(p=>p.sugar===0 && p.climate===null))
+        sentences.push(tr('Another zero-sugar option has no reported climate figure.','Ett annat sockerfritt alternativ saknar redovisat klimatvärde.'));
       return sentences.join(' ');
     }
     if(q.choose){
@@ -119,59 +134,26 @@
     return tr('Are you looking for low sugar, less fat, a coffee drink, or something else?',
       'Söker du mindre socker, lägre fett, något till kaffe eller något annat?');
   }
-  function aiEndpoint(){
-    const raw=String(window.OATLY_AI_ENDPOINT||'').trim();
-    try{const url=new URL(raw);return url.protocol==='https:'?url.href:'';}catch(_){return '';}
-  }
-  function updateLabels(){
-    const active=!!aiEndpoint();
-    const title=document.querySelector('.chat-heading small');
-    if(title)title.textContent=active?tr('AI shopping assistant · English / Svenska','AI-köpassistent · svenska / engelska'):
-      tr('Product guide · English / Svenska','Produktguide · svenska / engelska');
-    const footer=document.querySelector('.chat-tiny');
-    if(footer){
-      footer.querySelector('.ai-note')?.remove();
-      const span=document.createElement('span');span.className='ai-note';
-      span.textContent=active?tr(' AI answers are processed by Cloudflare Workers AI.',' AI-svar behandlas av Cloudflare Workers AI.'):
-        tr(' Answers use the local product guide until AI is connected.',' Svaren kommer från produktguiden tills AI är ansluten.');
-      footer.appendChild(span);
-    }
-  }
+  // Answer only what was asked. The page does not contact a chatbot API.
   respond=function(input){
     const question=String(input||'').trim().slice(0,400);
-    if(!question)return;
-    const endpoint=aiEndpoint();
-    if(!endpoint){
-      const reply=guide(question);addMessage(reply,'bot');
-      history.push({role:'user',content:question},{role:'assistant',content:reply});history=history.slice(-8);
-      return;
-    }
-    const pending=document.createElement('div');pending.className='msg bot';pending.textContent=tr('One moment…','Ett ögonblick…');
-    $('messages').appendChild(pending);
-    const ctrl=new AbortController();
-    const timer=setTimeout(()=>ctrl.abort(),16000);
-    fetch(endpoint,{method:'POST',mode:'cors',headers:{'Content-Type':'application/json'},
-      credentials:'omit',signal:ctrl.signal,
-      body:JSON.stringify({message:question,language:sw()?'sv':'en',selected:selected.slice(),
-        preferences:{...prefs},history:history.slice(-6)})})
-    .then(async response=>{if(!response.ok)throw Error('AI '+response.status);
-      const data=await response.json();if(typeof data.reply!=='string'||!data.reply.trim())throw Error('Empty response');
-      return data.reply.trim().slice(0,900);})
-    .catch(e=>{console.warn('AI temporarily unavailable:',e.name);return guide(question);})
-    .then(reply=>{pending.remove();addMessage(reply,'bot');
-      history.push({role:'user',content:question},{role:'assistant',content:reply});history=history.slice(-8);
-    }).finally(()=>clearTimeout(timer));
+    if(question)addMessage(guide(question),'bot');
   };
   showDetails=function(id){
     const p=byId(id);if(!p)return;
-    lastProduct=id;openChat();
-    const query=tr('Tell me about '+p.name,'Berätta om '+p.name);
-    addMessage(query,'user');respond(query);
+    lastProduct=id;
+    openChat();
+    const prompt=tr('Tell me about '+p.name,'Berätta om '+p.name);
+    addMessage(prompt,'user');
+    addMessage(guide(prompt),'bot');
   };
-  $('clear-chat')?.addEventListener('click',()=>{history=[];lastProduct=null;});
-  document.querySelectorAll('[data-site-language]').forEach(button=>button.addEventListener('click',()=>{
-    history=[];lastProduct=null;queueMicrotask(updateLabels);
-  }));
-  updateLabels();
-  window.OatlyChat={isAIConnected:()=>!!aiEndpoint(),offlineAnswer:guide};
+  $('clear-chat')?.addEventListener('click',()=>{lastProduct=null;});
+  function updateLabel(){
+    const subtitle=document.querySelector('.chat-heading small');
+    if(subtitle)subtitle.textContent=tr('Product guide · English / Svenska','Produktguide · svenska / engelska');
+    document.querySelector('.ai-note')?.remove();
+  }
+  document.querySelectorAll('[data-site-language]').forEach(b=>b.addEventListener('click',()=>{lastProduct=null;queueMicrotask(updateLabel);}));
+  updateLabel();
+  window.OatlyChat={isAIConnected:()=>false,offlineAnswer:guide};
 })();
