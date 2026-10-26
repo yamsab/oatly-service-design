@@ -2,21 +2,21 @@
 const ORIGIN='https://yamsab.github.io';
 const MODEL='@cf/meta/llama-3.1-8b-instruct-fp8';
 const CATALOG=[
-  ['nosugar','Havredryck No Sugars',0,1.5,44,0.7,false,0.46,'drinking,cooking,baking,coffee'],
-  ['ikaffe','Havredryck iKaffe',3.4,3,61,0.8,false,0.33,'coffee,cooking,baking,drinking'],
-  ['light','iKaffe Light',3.4,2.1,52,0.8,false,0.31,'coffee,cooking,baking,drinking'],
-  ['organic','Havredryck Ekologisk',3.4,0.5,39,0.8,true,0.30,'drinking,cooking,baking,coffee'],
-  ['organiccoffee','iKaffe Ekologisk',2.2,3.2,59,0.7,true,0.32,'coffee,cooking,baking,drinking'],
-  ['fiber','Havredryck Fiber Low-Calorie',0,0.8,20,2,false,null,'drinking,smoothies,cooking,baking,coffee'],
-  ['vanilla','iKaffe Vanilla Flavour',5.1,3.2,72,0.8,false,0.41,'coffee,smoothies,drinking'],
-  ['choc','Havredryck Choklad',6.8,1.5,65,1.1,false,0.38,'drinking']
+  ['nosugar','Havredryck No Sugars',0,1.5,44,0.7,false,0.46,'drinking,cooking,baking,coffee',"Water, oats (10%), rapeseed oil, acidity regulator, minerals, salt and vitamins.","plain"],
+  ['ikaffe','Havredryck iKaffe',3.4,3,61,0.8,false,0.33,'coffee,cooking,baking,drinking',"Water, oats (10%), rapeseed oil, acidity regulator, minerals, salt and vitamins.","plain"],
+  ['light','iKaffe Light',3.4,2.1,52,0.8,false,0.31,'coffee,cooking,baking,drinking',"Water, oats (10%), rapeseed oil, acidity regulator, minerals, salt and vitamins.","plain"],
+  ['organic','Havredryck Ekologisk',3.4,0.5,39,0.8,true,0.30,'drinking,cooking,baking,coffee',"Water, organic oats (10%), sea salt and vitamin D2.","plain"],
+  ['organiccoffee','iKaffe Ekologisk',2.2,3.2,59,0.7,true,0.32,'coffee,cooking,baking,drinking',"Water, organic oats (10%), organic rapeseed oil, sea salt and acidity regulator.","plain"],
+  ['fiber','Havredryck Fiber Low-Calorie',0,0.8,20,2,false,null,'drinking,smoothies,cooking,baking,coffee',"Water, oats (2%), soluble corn fiber, chicory root fiber, rapeseed oil, minerals, acidity regulator, salt, flavourings, citrus fiber and vitamins.","plain"],
+  ['vanilla','iKaffe Vanilla Flavour',5.1,3.2,72,0.8,false,0.41,'coffee,smoothies,drinking',"Water, oats (10%), rapeseed oil, sugar (1.6%), acidity regulator, mineral, flavourings, salt and vitamins.","vanilla"],
+  ['choc','Havredryck Choklad',6.8,1.5,65,1.1,false,0.38,'drinking',"Water, oats (10%), sugar (3.3%), reduced-fat cocoa powder (1%), rapeseed oil, minerals, salt, flavourings and vitamins.","chocolate"]
 ];
 const SYSTEM=[
   'You are Ask Oatly, a warm, concise product-shopping guide for eight Oatly oat drinks.',
   'Always respond in the selected language (English or Swedish). Answer only what the customer asked, normally in one or two short sentences. Be human and direct.',
   'Never introduce yourself or say "As an AI", "In this prototype", "In this demo", or explain technical limitations unless the user asks how it works.',
   'Product facts may ONLY come from the trusted catalog below. Nutrition is per 100 ml; climate is kg CO2e per kg of product. Missing climate means unknown.',
-  'Do not invent product ingredients, allergies, health advice, prices, product stock, local availability or environmental claims. If a fact is unknown, say so briefly.',
+  'Only ingredient summaries are included in the catalog; for a complete current list or allergies, advise checking the product label. Do not invent allergies, health advice, prices, product stock, local availability or environmental claims. If a fact is unknown, say so briefly.',
   'If a customer wants zero sugar, do not recommend a product with nonzero sugars without saying it fails that requirement. Respect other hard filters.',
   'For comparisons, prioritize the stated preferences and explain one clear trade-off. If there is no universal best, answer relative to the actual criteria.',
   'For retailer questions, mention ICA, Coop, Hemköp and Willys only as possible retailers; stock cannot be verified.',
@@ -54,7 +54,7 @@ export default {
     const language=body.language==='sv'?'Swedish':'English';
     const compared=Array.isArray(body.selected)?body.selected.filter(x=>typeof x==='string').slice(0,5):[];
     const chosen=CATALOG.filter(x=>compared.includes(x[0])).map(x=>x[1]);
-    const catalog=CATALOG.map(x=>x[1]+' | sugars '+x[2]+'g | fat '+x[3]+'g | energy '+x[4]+'kcal | fibre '+x[5]+'g | organic '+x[6]+' | climate '+(x[7]===null?'not reported':x[7]+' kg CO2e/kg')+' | uses '+x[8]).join('\n');
+    const catalog=CATALOG.map(x=>x[1]+' | sugars '+x[2]+'g | fat '+x[3]+'g | energy '+x[4]+'kcal | fibre '+x[5]+'g | organic '+x[6]+' | climate '+(x[7]===null?'not reported':x[7]+' kg CO2e/kg')+' | uses '+x[8]+' | ingredient summary '+x[9]+' | flavour '+x[10]).join('\n');
     const history=Array.isArray(body.history)?body.history.slice(-6)
       .filter(x=>x&&['user','assistant'].includes(x.role)&&typeof x.content==='string')
       .map(x=>({role:x.role,content:x.content.slice(0,380)})):[];
