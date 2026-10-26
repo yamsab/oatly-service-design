@@ -97,6 +97,7 @@
     ["Source","Källa"],["Ingredients","Ingredienser"],
     ["0 g sugars","0 g sockerarter"]
   );
+  enSv.push(['Use on-device speech','Använd lokal taligenkänning'],['✓ On-device speech ready','✓ Lokal taligenkänning klar']);
   const dictionary = new Map(enSv);
   let locale = 'en';
   const savedTexts = new WeakMap(), savedAttrs = new WeakMap();
@@ -191,6 +192,7 @@
     document.title=locale==='sv'?'Hitta din Oatly-favorit – studentprototyp':'Find Your Perfect Oatly — Student Prototype';
     switcher.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.siteLanguage===locale)));
     $('voice-language').value=locale==='sv'?'sv-SE':'en-US';
+    if(typeof updateLocalVoiceButton==='function')updateLocalVoiceButton();
     resetPrompts();
     // Do not leave old assistant responses in the other language.
     $('messages').replaceChildren();
@@ -331,7 +333,12 @@
       else if(message.startsWith('✅ Heard you!'))message='✅ Jag hörde dig! Förbereder svar …';
       else if(message.startsWith('✅ Finished speaking.'))message='✅ Uppläsningen är klar. Prata eller skriv din nästa fråga.';
       else if(message.startsWith('🔊 Speaker test started.'))message='🔊 Ljudtestet har startat. Kontrollera volymen om du inte hör något.';
-      else if(message.startsWith('⚠️'))message='⚠️ Talfunktionen är inte tillgänglig just nu. Kontrollera webbläsarens mikrofonbehörighet eller skriv din fråga.';
+       else if(message.includes('browser speech-recognition service could not be reached'))message='⚠️ Webbläsarens taligenkänningstjänst kan inte nås. Oatly-webbplatsen fungerar fortfarande. Försök igen, använd lokal taligenkänning om den finns, eller tangentbordets mikrofon. Du kan alltid skriva i chatten.';
+       else if(message.includes('on-device speech engine could not start'))message='⚠️ Den lokala taligenkänningen kunde inte starta. Stäng av det lokala läget eller använd tangentbordets mikrofon. Textchatten fungerar fortfarande.';
+       else if(message.startsWith('⚠️') && /on-device|language pack|selected language/.test(message))message='⚠️ Lokal taligenkänning eller språkpaketet stöds inte här. Du kan skriva eller använda tangentbordets mikrofon.';
+       else if(message.startsWith('✅')&&message.includes('On-device speech'))message='✅ Lokal taligenkänning är klar. Tryck på mikrofonen för att testa.';
+       else if(message.startsWith('ℹ️')&&/on-device|language pack|browser speech service/.test(message))message='ℹ️ Lokal taligenkänning för språket kontrolleras eller installeras. Följ webbläsarens instruktioner.';
+       else if(message.startsWith('⚠️'))message='⚠️ Taligenkänningen fungerar inte just nu. Kontrollera mikrofonbehörigheten eller använd tangentbordets mikrofon. Du kan fortfarande skriva i chatten.';
       else if(message.startsWith('ℹ️'))message='ℹ️ Kontrollera mikrofonbehörigheten för den här webbplatsen i webbläsarens inställningar, eller skriv din fråga.';
       else if(message.startsWith('🔊'))message='🔊 Uppläsning är inte tillgänglig just nu. Du kan läsa svaret i chatten.';
       else if(message.startsWith('🎙'))message='🎙 Tryck på mikrofonen för att prata eller skriv din fråga.';
